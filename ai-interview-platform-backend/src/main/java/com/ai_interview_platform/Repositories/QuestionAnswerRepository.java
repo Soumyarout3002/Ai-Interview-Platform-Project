@@ -8,5 +8,5 @@ import java.util.List;
 import java.util.UUID;
 
 public interface QuestionAnswerRepository extends JpaRepository<QuestionAnswer,UUID> {
-    List<QuestionAnswer>findBySessionOrderByQusetionNumber(InterviewSession session);
+    List<QuestionAnswer>findBySessionOrderByQuestionNumber(InterviewSession session);
 }
