@@ -9,6 +9,8 @@ import java.util.UUID;
 public interface QuestionAnswerService {
     QuestionAnswerResponse addQuestion(UUID sessionId ,String questionText , String difficulty);
 
+    QuestionAnswerResponse generateQuestion(UUID sessionId);
+
     QuestionAnswerResponse submitAnswer(UUID questionAnswerId , SubmitAnswerRequest request);
 
     List<QuestionAnswerResponse> getSessionQuestions(UUID sessionId);

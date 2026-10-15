@@ -28,6 +28,14 @@ public class QuestionAnswerController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/in/{sessionId}/que/generate")
+    public ResponseEntity<QuestionAnswerResponse> generateQuestion(
+            @PathVariable UUID sessionId){
+        QuestionAnswerResponse response= questionAnswerService
+                .generateQuestion(sessionId);
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/que/{questionId}/ans")
     public ResponseEntity<QuestionAnswerResponse> submitAnswer(
             @PathVariable UUID questionId,
