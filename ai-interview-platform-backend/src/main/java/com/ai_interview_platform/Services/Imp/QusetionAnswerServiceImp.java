@@ -93,8 +93,27 @@ public class QusetionAnswerServiceImp implements QuestionAnswerService {
 
         QuestionAnswer questionAnswer=questionAnswerRepository.findById(questionAnswerId).orElseThrow(()->
                 new IllegalArgumentException("Question Not Found"));
+
+        if(questionAnswer.getAnswer() != null){
+            throw new IllegalArgumentException("Answer has already been submitted");
+        }
+
+        InterviewSession session = questionAnswer.getSession();
+
+        String evaluation = aiService.evaluateAnswer(
+                session.getCategory(),
+                questionAnswer.getDifficulty(),
+                questionAnswer.getQuestionText(),
+                request.answer()
+
+        );
+
+        Integer score = extractScore(evaluation);
+
         questionAnswer.setAnswer(request.answer());
         questionAnswer.setSubmittedAt(LocalDateTime.now());
+        questionAnswer.setAiScore(score);
+        questionAnswer.setAiFeedback(evaluation);
 
         QuestionAnswer saved = questionAnswerRepository.save(questionAnswer);
 
@@ -110,5 +129,28 @@ public class QusetionAnswerServiceImp implements QuestionAnswerService {
                 .stream()
                 .map(this::mapToResponse)
                 .toList();
+    }
+
+    private Integer extractScore(String evaluation) {
+
+        String firstLine = evaluation.lines()
+                .findFirst()
+                .orElse("");
+
+        if (!firstLine.startsWith("SCORE:")) {
+            throw new IllegalStateException(
+                    "AI evaluation did not contain a valid score"
+            );
+        }
+
+        try {
+            return Integer.parseInt(
+                    firstLine.substring("SCORE:".length()).trim()
+            );
+        } catch (NumberFormatException exception) {
+            throw new IllegalStateException(
+                    "AI returned an invalid score"
+            );
+        }
     }
 }
