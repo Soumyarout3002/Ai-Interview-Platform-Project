@@ -1,5 +1,6 @@
 package com.ai_interview_platform.Services.Imp;
 
+import com.ai_interview_platform.DTOs.AIAnswerEvaluation;
 import com.ai_interview_platform.DTOs.QuestionAnswerResponse;
 import com.ai_interview_platform.DTOs.SubmitAnswerRequest;
 import com.ai_interview_platform.Models.InterviewSession;
@@ -100,7 +101,7 @@ public class QusetionAnswerServiceImp implements QuestionAnswerService {
 
         InterviewSession session = questionAnswer.getSession();
 
-        String evaluation = aiService.evaluateAnswer(
+        AIAnswerEvaluation evaluation = aiService.evaluateAnswer(
                 session.getCategory(),
                 questionAnswer.getDifficulty(),
                 questionAnswer.getQuestionText(),
@@ -108,12 +109,19 @@ public class QusetionAnswerServiceImp implements QuestionAnswerService {
 
         );
 
-        Integer score = extractScore(evaluation);
-
         questionAnswer.setAnswer(request.answer());
         questionAnswer.setSubmittedAt(LocalDateTime.now());
-        questionAnswer.setAiScore(score);
-        questionAnswer.setAiFeedback(evaluation);
+        questionAnswer.setAiScore(evaluation.score());
+        questionAnswer.setAiFeedback("""
+                Strengths: %s
+                
+                Improvements: %s
+                
+                FeedBack: %s""".formatted(
+                        evaluation.strengths(),
+                evaluation.improvements(),
+                evaluation.feedback()
+        ));
 
         QuestionAnswer saved = questionAnswerRepository.save(questionAnswer);
 
@@ -130,27 +138,5 @@ public class QusetionAnswerServiceImp implements QuestionAnswerService {
                 .map(this::mapToResponse)
                 .toList();
     }
-
-    private Integer extractScore(String evaluation) {
-
-        String firstLine = evaluation.lines()
-                .findFirst()
-                .orElse("");
-
-        if (!firstLine.startsWith("SCORE:")) {
-            throw new IllegalStateException(
-                    "AI evaluation did not contain a valid score"
-            );
-        }
-
-        try {
-            return Integer.parseInt(
-                    firstLine.substring("SCORE:".length()).trim()
-            );
-        } catch (NumberFormatException exception) {
-            throw new IllegalStateException(
-                    "AI returned an invalid score"
-            );
-        }
-    }
+    
 }
