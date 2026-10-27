@@ -1,5 +1,6 @@
 package com.ai_interview_platform.Services.Imp;
 
+import ch.qos.logback.core.model.processor.AllowAllModelFilter;
 import com.ai_interview_platform.DTOs.AIAnswerEvaluation;
 import com.ai_interview_platform.DTOs.QuestionAnswerResponse;
 import com.ai_interview_platform.DTOs.SubmitAnswerRequest;
@@ -11,17 +12,22 @@ import com.ai_interview_platform.Repositories.QuestionAnswerRepository;
 import com.ai_interview_platform.Services.AiService;
 import com.ai_interview_platform.Services.QuestionAnswerService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class QusetionAnswerServiceImp implements QuestionAnswerService {
 
+    @Value("${interview.max-questions:5}")
+    private int maxQues;
     private final QuestionAnswerRepository questionAnswerRepository;
     private final InterviewSessionRepository interviewSessionRepository;
     private final AiService aiService;
@@ -59,6 +65,12 @@ public class QusetionAnswerServiceImp implements QuestionAnswerService {
         }
         List<QuestionAnswer> existingQuestions =questionAnswerRepository
                 .findBySessionOrderByQuestionNumber(session);
+
+        if (existingQuestions.size() >= maxQues) {
+            throw new IllegalStateException(
+                    "Maximum question limit reached for this interview");
+        }
+
         int questionNumber = existingQuestions.size() + 1;
 
         String question = aiService.generateQuestion(session.getCategory(),session.getDifficulty());
@@ -138,5 +150,52 @@ public class QusetionAnswerServiceImp implements QuestionAnswerService {
                 .map(this::mapToResponse)
                 .toList();
     }
-    
+
+
+    private static final Set<String> ALLOWED_CATEGORIES = Set.of(
+            "JAVA",
+            "C",
+            "C++",
+            "PYTHON",
+            "JAVASCRIPT",
+            "TYPESCRIPT",
+            "C#",
+            "GO",
+            "RUST",
+            "SQL",
+            "DSA",
+            "DBMS",
+            "OS",
+            "NETWORKING",
+            "OOP",
+            "SYSTEM_DESIGN"
+    );
+    private static final Set<String> ALLOWED_DIFFICULTIES = Set.of(
+            "EASY",
+            "MEDIUM",
+            "HARD"
+    );
+
+    private String validateCategory(String category) {
+        String normalized = category.trim().toUpperCase(Locale.ROOT);
+
+        if (!ALLOWED_CATEGORIES.contains(normalized)){
+            throw new IllegalArgumentException("Unsupported interview category:"+category);
+        }
+        return normalized;
+
+        }
+
+    private String validateDifficulty(String difficulty) {
+        String normalized = difficulty.trim().toUpperCase(Locale.ROOT);
+
+        if (!ALLOWED_DIFFICULTIES.contains(normalized)){
+            throw new IllegalArgumentException("Unsupported interview category:"+difficulty);
+        }
+        return normalized;
+
+    }
+
+
+
 }
