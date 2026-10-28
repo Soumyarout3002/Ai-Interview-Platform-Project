@@ -28,6 +28,7 @@ public class ScorecardServiceImp implements ScorecardService {
     private final AiService aiService;
 
     @Override
+    @Transactional
     public ScorecardResponse completeInterview(UUID sessionId) {
 
         InterviewSession session = interviewSessionRepository.findById(sessionId).orElseThrow(
@@ -77,6 +78,22 @@ public class ScorecardServiceImp implements ScorecardService {
                 interviewHistory
         );
 
+        if (summary == null
+                || !isValidScore(summary.technicalScore())
+                || !isValidScore(summary.communicationScore())
+                || !isValidScore(summary.problemSolvingScore())
+                || summary.strengths() == null
+                || summary.strengths().isBlank()
+                || summary.weaknesses() == null
+                || summary.weaknesses().isBlank()
+                || summary.detailedFeedback() == null
+                || summary.detailedFeedback().isBlank()) {
+            throw new IllegalStateException(
+                    "AI returned an invalid interview summary"
+            );
+        }
+
+
         double averageScore = questions.stream()
                 .mapToInt(QuestionAnswer::getAiScore).average().orElseThrow();
 
@@ -108,6 +125,7 @@ public class ScorecardServiceImp implements ScorecardService {
         return new ScorecardResponse(
                 scorecard.getId(),
                 scorecard.getSession().getId(),
+                scorecard.getCommunicationScore(),
                 scorecard.getTechnicalScore(),
                 scorecard.getProblemSolvingScore(),
                 scorecard.getOverallScore(),
@@ -131,6 +149,9 @@ public class ScorecardServiceImp implements ScorecardService {
 
         return mapToResponse(scorecard);
 
+    }
+    private boolean isValidScore(Integer score) {
+        return score != null && score >= 0 && score <= 100;
     }
 
 

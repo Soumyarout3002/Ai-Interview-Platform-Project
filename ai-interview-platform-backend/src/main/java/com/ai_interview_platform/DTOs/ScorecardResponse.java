@@ -10,6 +10,7 @@ public record ScorecardResponse(
         Integer technicalScore,
         Integer communicationScore,
         Integer problemSolvingScore,
+        Integer overallScore,
         String strengths,
         String weaknesses,
         String Feedback,
