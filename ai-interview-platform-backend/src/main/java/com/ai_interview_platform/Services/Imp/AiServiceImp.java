@@ -1,6 +1,7 @@
 package com.ai_interview_platform.Services.Imp;
 
 import com.ai_interview_platform.DTOs.AIAnswerEvaluation;
+import com.ai_interview_platform.DTOs.AIInterviewSummary;
 import com.ai_interview_platform.Services.AiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
@@ -78,4 +79,64 @@ public class AiServiceImp implements AiService {
 
         return evaluation;
     }
+
+    @Override
+    public AIInterviewSummary generateInterviewSummary(String category, String difficulty, String interviewHistory) {
+
+         String prompt = """
+            You are an experienced technical interviewer.
+
+            Evaluate the candidate's complete mock interview.
+
+            Category: %s
+            Difficulty: %s
+
+            Interview history, including questions, answers,
+            and previous AI evaluations:
+            %s
+
+            Return:
+            - technicalScore: integer from 0 to 100
+            - communicationScore: integer from 0 to 100
+            - problemSolvingScore: integer from 0 to 100
+            - strengths: evidence-based strengths
+            - weaknesses: areas needing improvement
+            - detailedFeedback: actionable overall feedback
+
+            Score only using evidence in the interview history.
+            Do not invent answers or accomplishments.
+            If evidence for a category is limited, reflect that
+            limitation in the feedback.
+            """.formatted(category, difficulty, interviewHistory);
+
+        AIInterviewSummary summary = chatClient
+                .prompt()
+                .user(prompt)
+                .call()
+                .entity(
+                        AIInterviewSummary.class,
+                        spec -> spec
+                                .useProviderStructuredOutput()
+                                .validateSchema()
+                );
+
+        if (summary == null
+                || !isValidScore(summary.technicalScore())
+                || !isValidScore(summary.communicationScore())
+                || !isValidScore(summary.problemSolvingScore())
+                || summary.strengths() == null
+                || summary.weaknesses() == null
+                || summary.detailedFeedback() == null) {
+
+            throw new IllegalStateException(
+                    "AI returned an invalid interview summary"
+            );
+        }
+
+        return summary;
+    }
+    private boolean isValidScore(Integer score) {
+        return score != null && score >= 0 && score <= 100;
+    }
+
 }

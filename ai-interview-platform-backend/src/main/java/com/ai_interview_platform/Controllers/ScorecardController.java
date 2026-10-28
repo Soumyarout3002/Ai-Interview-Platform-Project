@@ -1,10 +1,8 @@
 package com.ai_interview_platform.Controllers;
 
-import com.ai_interview_platform.DTOs.CompleteInterviewRequest;
 import com.ai_interview_platform.DTOs.ScorecardResponse;
 import com.ai_interview_platform.Services.ScorecardService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,17 +17,14 @@ public class ScorecardController {
 
     @PostMapping("/{sessionId}/complete")
     public ResponseEntity<ScorecardResponse> completeInterview(
-            @PathVariable UUID sessionId,
-            @RequestBody CompleteInterviewRequest request
-            ){
-        ScorecardResponse response=scorecardService.completeInterview(sessionId,request);
+            @PathVariable UUID sessionId){
+        ScorecardResponse response=scorecardService.completeInterview(sessionId);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{sessionId}/scorecard")
-    public ResponseEntity<ScorecardResponse> completeInterview(
-            @PathVariable UUID sessionId
-    ){
+    public ResponseEntity<ScorecardResponse> getScoreCard(
+            @PathVariable UUID sessionId){
         ScorecardResponse response=scorecardService.getScorecard(sessionId);
         
         return ResponseEntity.ok(response);
