@@ -5,7 +5,12 @@ import com.ai_interview_platform.DTOs.AIInterviewSummary;
 import com.ai_interview_platform.Services.AiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.lang.module.ResolutionException;
 
 @Service
 @RequiredArgsConstructor
@@ -27,13 +32,28 @@ public class AiServiceImp implements AiService {
                 -Do not provide the answer.
                 -Do not provide explanations.
                 - Return only the interview question.""".formatted(category,difficulty);
-        String response= chatClient
-                .prompt()
-                .user(prompt)
-                .call()
-                .content();
+        String response ;
+        try {
+            response = chatClient
+                    .prompt()
+                    .user(prompt)
+                    .call()
+                    .content();
+        } catch (RuntimeException e) {
+            Throwable root = e;
+            while (root.getCause() != null) {
+                root = root.getCause();
+            }
+            System.out.println(">>> ROOT CAUSE: " + root);
+            e.printStackTrace();
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY,
+                    "Gemini call failed: " + root.getMessage(), e);
+        }
         System.out.println(">>> AFTER GEMINI CALL");
-        return response;
+        if (response == null || response.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Gemini returned an empty question");
+        }
+        return response.trim();
     }
 
     @Override
