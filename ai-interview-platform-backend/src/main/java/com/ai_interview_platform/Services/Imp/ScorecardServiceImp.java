@@ -29,9 +29,9 @@ public class ScorecardServiceImp implements ScorecardService {
 
     @Override
     @Transactional
-    public ScorecardResponse completeInterview(UUID sessionId) {
+    public ScorecardResponse completeInterview(UUID sessionId,UUID userId) {
 
-        InterviewSession session = interviewSessionRepository.findById(sessionId).orElseThrow(
+        InterviewSession session = interviewSessionRepository.findByIdAndUser_Id(sessionId,userId).orElseThrow(
                 () -> new IllegalArgumentException("Interview Session Not Found")
         );
         if (session.getStatus() != InterviewStatus.IN_PROCESS) {
@@ -139,12 +139,12 @@ public class ScorecardServiceImp implements ScorecardService {
 
     @Override
     @Transactional(readOnly = true)
-    public ScorecardResponse getScorecard(UUID sessionId) {
+    public ScorecardResponse getScorecard(UUID sessionId,UUID userId) {
 
         InterviewSession session = interviewSessionRepository.findById(sessionId).orElseThrow(()->
                 new IllegalArgumentException("Interview Session Not Found"));
 
-        Scorecard scorecard= scorecardRepository.findBySession(session).orElseThrow(()->
+        Scorecard scorecard= scorecardRepository.findBySession_IdAndSession_User_Id(sessionId,userId).orElseThrow(()->
                 new IllegalArgumentException("Scorecard Not Found"));
 
         return mapToResponse(scorecard);

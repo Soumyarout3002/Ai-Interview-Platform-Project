@@ -7,11 +7,11 @@ import java.util.List;
 import java.util.UUID;
 
 public interface QuestionAnswerService {
-    QuestionAnswerResponse addQuestion(UUID sessionId ,String questionText , String difficulty);
+    QuestionAnswerResponse addQuestion(UUID sessionId ,UUID userId,String questionText , String difficulty);
 
-    QuestionAnswerResponse generateQuestion(UUID sessionId);
+    QuestionAnswerResponse generateQuestion(UUID sessionId,UUID userId);
 
-    QuestionAnswerResponse submitAnswer(UUID questionAnswerId , SubmitAnswerRequest request);
+    QuestionAnswerResponse submitAnswer(UUID questionAnswerId ,UUID userId, SubmitAnswerRequest request);
 
-    List<QuestionAnswerResponse> getSessionQuestions(UUID sessionId);
+    List<QuestionAnswerResponse> getSessionQuestions(UUID sessionId,UUID userId);
 }

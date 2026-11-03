@@ -5,8 +5,11 @@ import com.ai_interview_platform.Models.QuestionAnswer;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface QuestionAnswerRepository extends JpaRepository<QuestionAnswer,UUID> {
     List<QuestionAnswer>findBySessionOrderByQuestionNumber(InterviewSession session);
+    Optional<QuestionAnswer> findByIdAndSession_User_Id(UUID questionId, UUID userId);
+
 }

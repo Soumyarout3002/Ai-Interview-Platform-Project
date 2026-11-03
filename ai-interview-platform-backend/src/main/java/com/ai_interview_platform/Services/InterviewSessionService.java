@@ -10,6 +10,6 @@ import java.util.UUID;
 public interface InterviewSessionService {
 
     InterviewSessionResponse startInterview(UUID userId , StartInterviewRequest request);
-    InterviewSessionResponse getInterviewById(UUID interviewId);
+    InterviewSessionResponse getInterviewById(UUID interviewId,UUID userId);
     List<InterviewSessionResponse>getUserInterview(UUID userId);
 }

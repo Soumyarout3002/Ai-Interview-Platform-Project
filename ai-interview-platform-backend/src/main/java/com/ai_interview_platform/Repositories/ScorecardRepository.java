@@ -10,5 +10,6 @@ import java.util.UUID;
 public interface ScorecardRepository extends JpaRepository<Scorecard, UUID> {
 
     Optional<Scorecard>findBySession(InterviewSession session);
+    Optional<Scorecard> findBySession_IdAndSession_User_Id(UUID sessionId, UUID userId);
     
 }

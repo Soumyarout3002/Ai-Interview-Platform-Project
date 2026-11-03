@@ -39,8 +39,8 @@ public class InterviewSessionServiceImp implements InterviewSessionService{
     }
 
     @Override
-    public InterviewSessionResponse getInterviewById(UUID interviewId) {
-        InterviewSession session= interviewSessionRepository.findById(interviewId).orElseThrow(()->
+    public InterviewSessionResponse getInterviewById(UUID interviewId,UUID userId) {
+        InterviewSession session= interviewSessionRepository.findByIdAndUser_Id(interviewId,userId).orElseThrow(()->
                 new IllegalArgumentException("Interview Not Found"));
         return mapToResponse(session);
     }
@@ -50,7 +50,7 @@ public class InterviewSessionServiceImp implements InterviewSessionService{
 
         User user =userRepository.findById(userId).orElseThrow(()->new IllegalArgumentException("User Not Found"));
         return interviewSessionRepository
-                .findByUserOrderByCreateAtDesc(user)
+                .findByUser_IdOrderByCreateAtDesc(userId)
                 .stream()
                 .map(this::mapToResponse)
                 .toList();

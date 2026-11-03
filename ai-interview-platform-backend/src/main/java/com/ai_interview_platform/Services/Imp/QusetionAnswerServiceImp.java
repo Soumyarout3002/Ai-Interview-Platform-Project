@@ -13,8 +13,10 @@ import com.ai_interview_platform.Services.AiService;
 import com.ai_interview_platform.Services.QuestionAnswerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -33,9 +35,8 @@ public class QusetionAnswerServiceImp implements QuestionAnswerService {
     private final AiService aiService;
 
     @Override
-    public QuestionAnswerResponse addQuestion(UUID sessionId, String questionText, String difficulty) {
-        InterviewSession session = interviewSessionRepository.findById(sessionId).orElseThrow(()
-                ->new IllegalArgumentException("Interview Session Not Found"));
+    public QuestionAnswerResponse addQuestion(UUID sessionId,UUID userId, String questionText, String difficulty) {
+        InterviewSession session = getOwnedSession(sessionId,userId);
 
         List<QuestionAnswer> existingQuestions =questionAnswerRepository
                 .findBySessionOrderByQuestionNumber(session);
@@ -54,10 +55,9 @@ public class QusetionAnswerServiceImp implements QuestionAnswerService {
 
     @Override
     @Transactional
-    public QuestionAnswerResponse generateQuestion(UUID sessionId) {
+    public QuestionAnswerResponse generateQuestion(UUID sessionId,UUID userId) {
 
-        InterviewSession session = interviewSessionRepository.findById(sessionId).orElseThrow(()
-                ->new IllegalArgumentException("Interview Session Not Found"));
+        InterviewSession session = getOwnedSession(sessionId,userId);
 
         if(session.getStatus() != InterviewStatus.IN_PROCESS) {
             throw new IllegalArgumentException(
@@ -102,9 +102,9 @@ public class QusetionAnswerServiceImp implements QuestionAnswerService {
     }
 
     @Override
-    public QuestionAnswerResponse submitAnswer(UUID questionAnswerId, SubmitAnswerRequest request) {
+    public QuestionAnswerResponse submitAnswer(UUID questionAnswerId,UUID userId, SubmitAnswerRequest request) {
 
-        QuestionAnswer questionAnswer=questionAnswerRepository.findById(questionAnswerId).orElseThrow(()->
+        QuestionAnswer questionAnswer=questionAnswerRepository.findByIdAndSession_User_Id(questionAnswerId,userId).orElseThrow(()->
                 new IllegalArgumentException("Question Not Found"));
 
         if(questionAnswer.getAnswer() != null){
@@ -141,10 +141,9 @@ public class QusetionAnswerServiceImp implements QuestionAnswerService {
     }
 
     @Override
-    public List<QuestionAnswerResponse> getSessionQuestions(UUID sessionId) {
+    public List<QuestionAnswerResponse> getSessionQuestions(UUID sessionId,UUID userId) {
 
-        InterviewSession session = interviewSessionRepository.findById(sessionId).orElseThrow(
-                ()-> new IllegalArgumentException("Interview Session Not Found "));
+        InterviewSession session = getOwnedSession(sessionId,userId);
         return questionAnswerRepository.findBySessionOrderByQuestionNumber(session)
                 .stream()
                 .map(this::mapToResponse)
@@ -194,6 +193,15 @@ public class QusetionAnswerServiceImp implements QuestionAnswerService {
         }
         return normalized;
 
+    }
+    private InterviewSession getOwnedSession(UUID sessionId, UUID userId) {
+
+        return interviewSessionRepository
+                .findByIdAndUser_Id(sessionId, userId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Interview Session Not Found"
+                ));
     }
 
 

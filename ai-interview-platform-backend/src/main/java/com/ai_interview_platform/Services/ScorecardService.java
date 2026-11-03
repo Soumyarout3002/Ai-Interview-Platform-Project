@@ -6,6 +6,6 @@ import java.util.UUID;
 
 public interface ScorecardService {
 
-    ScorecardResponse completeInterview(UUID sessionId);
-    ScorecardResponse getScorecard(UUID sessionId);
+    ScorecardResponse completeInterview(UUID sessionId, UUID userId);
+    ScorecardResponse getScorecard(UUID sessionId , UUID userId);
 }
