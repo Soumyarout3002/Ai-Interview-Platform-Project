@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import reactor.core.publisher.Flux;
 
 import java.lang.module.ResolutionException;
 
@@ -155,6 +156,33 @@ public class AiServiceImp implements AiService {
 
         return summary;
     }
+
+    @Override
+    public Flux<String> generateQuestionStream(String category, String difficulty) {
+
+        String prompt = buildQuestionPrompt(category,difficulty);
+        return chatClient.prompt()
+                .user(prompt)
+                .stream()
+                .content();
+    }
+
+    private String buildQuestionPrompt(String category, String difficulty) {
+        return """
+            You are an experienced technical interviewer.
+
+            Generate exactly one interview question.
+
+            category : %s
+            difficulty : %s
+
+            Requirements :
+            - The question must be suitable for a technical mock interview.
+            -Do not provide the answer.
+            -Do not provide explanations.
+            - Return only the interview question.""".formatted(category, difficulty);
+    }
+
     private boolean isValidScore(Integer score) {
         return score != null && score >= 0 && score <= 100;
     }
